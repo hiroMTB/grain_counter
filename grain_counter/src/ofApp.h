@@ -9,7 +9,7 @@ class Sequence{
 public:
     Sequence(){};
     Sequence(int t, string s)
-    :t(time), cmd(s){}
+    :time(t), cmd(s){}
     
     float time = 0;     // sec
     string cmd = "";    // gcode
