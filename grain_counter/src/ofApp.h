@@ -8,10 +8,12 @@ class Sequence{
     
 public:
     Sequence(){};
-    Sequence(int t, string s)
-    :time(t), cmd(s){}
+    Sequence(float _time, string _cmd){
+        frame = _time * ofGetTargetFrameRate();
+        cmd = _cmd;
+    }
     
-    float time = 0;     // sec
+    int frame = 0;     // frame
     string cmd = "";    // gcode
 };
 
@@ -22,6 +24,9 @@ public:
     void setupSerial();
     void setupCamera();
     void generateSequence();
+    void takePhoto(bool upload=true);
+    void checkSequence(int frame);
+    float calcWait(float posSt, float posEnd, float speed);
     
     void update();
     void draw();
@@ -46,6 +51,8 @@ public:
 
     
     vector<Sequence> seq;
+
     
+    int startFrame = 0;
 };
 

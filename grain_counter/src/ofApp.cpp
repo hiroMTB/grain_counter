@@ -24,6 +24,7 @@ void ofApp::setup(){
     ofSetVerticalSync(true);
     
     ofBackground(255);
+    ofSetFrameRate(30);
     ofSetLogLevel(OF_LOG_VERBOSE);
     
     gcc.init("/dev/cu.usbmodem1411", 115200);
@@ -34,43 +35,108 @@ void ofApp::setup(){
     ofAddListener(httpUtils.newResponseEvent,this,&ofApp::newResponse);
     httpUtils.start();
     
+    generateSequence();
+    
     address = randomIPv6();
+    
+    startFrame = ofGetFrameNum() + 30;
+    
 }
 
 void ofApp::generateSequence(){
 
+    glm::vec3 dropPos;
+    
     float time = 3;
     
     // Homing
     seq.push_back(Sequence(time, gcc.home()));
-
-    
     time = 10;
-
     
     int row = 8;
     int col = 8;
+    int wait = 5;
     
     for(int i=0; i<row; i++){
         for(int j=0; j<col; j++){
             
+            dropPos.x = 30 + col * 20;
+            dropPos.y = 150 + row * 20;
+            dropPos.z = 4;
+            
+            
             // 1. move Z up
             seq.push_back(Sequence(time, gcc.moveToZ(20)) );
-            time = 10;
+            time += wait;
             
             // 2. move X to the middle
-            seq.push_back(Sequence(time, gcc.moveToX(30)) );
-            time = 10;
+            seq.push_back(Sequence(time, gcc.moveToX(30)) ); // 40-80
+            time += wait;
+
+            // 3. move Y to the middle
+            seq.push_back(Sequence(time, gcc.moveToY(120)) ); // Y117 - Y157
+            time += wait;
+
+            // 4. down to grain
+            seq.push_back(Sequence(time, gcc.moveToX(10)) ); // Z 10
+            time += wait;
             
-            seq.push_back(Sequence(time, gcc.moveToY(120)) );
-            time = 10;
+            // 5. turn on pump
+            seq.push_back(Sequence(time, gcc.suck(true)) );
+            time += 0.5;
             
+            // 6. more closer to grain
+            seq.push_back(Sequence(time, gcc.moveToZ(4)) );
+            time += 1;
             
+            // 7. lift up
+            seq.push_back(Sequence(time, gcc.moveToZ(15)) );
+            time += wait;
             
+            // 8. go to drop down position
+            seq.push_back(Sequence(time, gcc.moveToX(30)) );   // ? - ?
+            time += wait;
+
+            // 9. go to drop down position
+            seq.push_back(Sequence(time, gcc.moveToY(150)) );   // ? - ?
+            time += wait;
             
+            // 10. down
+            seq.push_back(Sequence(time, gcc.moveToZ(4)) );   // ? - ?
+            time += wait;
+
+            // 11. drop
+            seq.push_back(Sequence(time, gcc.suck(false)) );
+            time += 0.5;
+
+            // 12. move up
+            seq.push_back(Sequence(time, gcc.moveToX(15)) );
+            time += wait;
+
+            // 13. cameara pos X
+            seq.push_back(Sequence(time, gcc.moveToX(gcc.targetPosition.x-40)) );
+            time += wait;
+
+            // 14. cameara pos Y
+            seq.push_back(Sequence(time, gcc.moveToY(gcc.targetPosition.y-4)) );
+            time += wait;
+
+            // 15. take photo
+            //1bSaveRequest = true;
+
         }
     }
 }
+
+float ofApp::calcWait(float posSt, float posEnd, float speed){
+    
+    float dist = posEnd - posSt;
+    float waitTime = dist / speed;
+    waitTime += 0.5;
+    return waitTime;
+    
+}
+
 
 void ofApp::setupCamera(){
     camWidth  = 320 * 2;
@@ -96,7 +162,27 @@ void ofApp::update(){
     vidGrabber.update();
     gcc.update();
     
+    float now = ofGetFrameNum() - startFrame;
+    //checkSequence(now);
+    
 }
+
+void ofApp::checkSequence(int now){
+    
+    for(int i=0; i<seq.size(); i++){
+
+        Sequence & s = seq[i];
+        
+        float time = s.frame;
+        
+        if(time == now){
+            string cmd = s.cmd;
+            gcc.excute(cmd);
+            cout << cmd << endl;
+        }
+    }
+}
+
 
 void ofApp::draw(){
     

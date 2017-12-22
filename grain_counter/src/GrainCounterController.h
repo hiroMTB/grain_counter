@@ -14,7 +14,6 @@ public:
         serial.listDevices();
         vector <ofSerialDeviceInfo> deviceList = serial.getDeviceList();
         
-        baud = 115200;
         serial.setup(name, baud);
         
         nTimesRead = 0;
@@ -68,6 +67,7 @@ public:
         int n = sprintf(c, "G0 X%d F%d\n", x, speed);
         serial.writeBytes(c, n);
         targetPosition.x = x;
+        targetSpeed = speed;
         return string(c);
     }
 
@@ -76,6 +76,8 @@ public:
         int n = sprintf(c, "G0 Y%d F%d\n", y, speed);
         serial.writeBytes(c, n);
         targetPosition.y = y;
+        targetSpeed = speed;
+
         return  string(c);
     }
 
@@ -84,6 +86,8 @@ public:
         int n = sprintf(c, "G0 Z%d F%d\n", z, speed);
         serial.writeBytes(c, n);
         targetPosition.z = z;
+        targetSpeed = speed;
+
         return string(c);
     }
     
@@ -96,9 +100,14 @@ public:
         return string(c);
     }
     
+    void excute(string cmd){
+        serial.writeBytes(cmd.c_str(), cmd.size());
+    }
+    
     
     ofRange xRange, yRange, zRange;
     glm::vec3 targetPosition;
+    float targetSpeed;
     bool bSuck = false;
     
     ofSerial	serial;
