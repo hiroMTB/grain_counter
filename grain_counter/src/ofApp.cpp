@@ -30,7 +30,7 @@ void ofApp::setup(){
     gcc.setRange(20,20,10);
     setupCamera();
     
-    action_url = "http://ingorandolf.info/sandcounter/upload.php";
+    action_url = "http://ingorandolf.info/sandgraincounter/upload.php";
     ofAddListener(httpUtils.newResponseEvent,this,&ofApp::newResponse);
     httpUtils.start();
     
