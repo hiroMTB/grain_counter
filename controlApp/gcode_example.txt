@@ -1,0 +1,70 @@
+sand grain counter 
+Gcode example
+by Jelle
+
+GCODE
+Turn on pump 			M104 S190 T0 
+Turn off pump 			M104 S0 T0
+
+Home 				G28
+Move 				G0 (axis)(position to move to) F(mm/min);
+
+
+G28 				Home head
+
+G0 Z20 F10000		Move Z up
+Wait for 10 seconds 
+
+G0 X120 F100000		Move X to the middle 
+
+G0 Y120 F100000		Move Y to the middle
+
+G0 Z1 F10000			Move Z to one cm above the platform
+M104 S190 T0 			Turn on the pump
+G0 Z10 F10000		Move Z down into the sand
+
+G0 Z20 F10000	1	Move Z up 2 cm
+G0 X100 F300			Move X to the position where the stone needs to be placed
+G0 Y100 F300			Move Y to the position where the stone needs to be placed
+
+G0 Z05 F10000		Move Z down and just hover above the ‘photo’ platform
+M104 S0 T0 			Turn off the pump
+G0 Z20 F10000		Move Z uo
+
+G0 X80 F300			Move X to microscope view
+G0 Z05 F10000		Move Z down until microscope is close
+
+—————MAKE PICTURE———————
+					
+Rinse and repeat
+
+
+
+
+
+
+
+
+
+
+
+
+Pickup:
+
+X40 X80
+Y157 Y117
+
+Z10
+turn on pump
+Z4
+
+Z15
+
+Drop down position
+Z2
+Turn of pump
+
+Camera offset:
+
+X: -40
+Y - 4
