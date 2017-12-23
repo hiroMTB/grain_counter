@@ -60,8 +60,8 @@ void ofApp::generateSequence(){
     for(int i=0; i<row; i++){
         for(int j=0; j<col; j++){
             
-            dropPos.x = 30 + col * 20;
-            dropPos.y = 150 + row * 20;
+            dropPos.x = 60 + (i*10);
+            dropPos.y = 137 - 40 - (j*10);
             dropPos.z = 4;
             
             
@@ -70,47 +70,47 @@ void ofApp::generateSequence(){
             time += wait;
             
             // 2. move X to the middle
-            seq.push_back(Sequence(time, gcc.moveToX(30)) ); // 40-80
+            seq.push_back(Sequence(time, gcc.moveToX(60)) ); // 40-80
             time += wait;
 
             // 3. move Y to the middle
-            seq.push_back(Sequence(time, gcc.moveToY(120)) ); // Y117 - Y157
+            seq.push_back(Sequence(time, gcc.moveToY(137)) ); // Y117 - Y157
             time += wait;
 
             // 4. down to grain
-            seq.push_back(Sequence(time, gcc.moveToX(10)) ); // Z 10
+            seq.push_back(Sequence(time, gcc.moveToZ(10)) ); // Z 10
             time += wait;
             
             // 5. turn on pump
             seq.push_back(Sequence(time, gcc.suck(true)) );
-            time += 0.5;
+            time += 1;
             
             // 6. more closer to grain
             seq.push_back(Sequence(time, gcc.moveToZ(4)) );
-            time += 1;
+            time += 2;
             
             // 7. lift up
-            seq.push_back(Sequence(time, gcc.moveToZ(15)) );
+            seq.push_back(Sequence(time, gcc.moveToZ(20)) );
             time += wait;
             
             // 8. go to drop down position
-            seq.push_back(Sequence(time, gcc.moveToX(30)) );   // ? - ?
+            seq.push_back(Sequence(time, gcc.moveToX(dropPos.x)) );   // ? - ?
             time += wait;
 
             // 9. go to drop down position
-            seq.push_back(Sequence(time, gcc.moveToY(150)) );   // ? - ?
+            seq.push_back(Sequence(time, gcc.moveToY(dropPos.y)) );   // ? - ?
             time += wait;
             
             // 10. down
-            seq.push_back(Sequence(time, gcc.moveToZ(4)) );   // ? - ?
+            seq.push_back(Sequence(time, gcc.moveToZ(2)) );   // ? - ?
             time += wait;
 
             // 11. drop
             seq.push_back(Sequence(time, gcc.suck(false)) );
-            time += 0.5;
+            time += 1;
 
             // 12. move up
-            seq.push_back(Sequence(time, gcc.moveToX(15)) );
+            seq.push_back(Sequence(time, gcc.moveToZ(15)) );
             time += wait;
 
             // 13. cameara pos X
@@ -120,10 +120,15 @@ void ofApp::generateSequence(){
             // 14. cameara pos Y
             seq.push_back(Sequence(time, gcc.moveToY(gcc.targetPosition.y-4)) );
             time += wait;
+            
+            // 15. move down
+            seq.push_back(Sequence(time, gcc.moveToZ(2)) );
+            time += wait+4;
 
-            // 15. take photo
-            //1bSaveRequest = true;
-
+            // 16. take photo
+            seq.push_back(Sequence(time, "take_photo") );
+            time += 5;
+            
         }
     }
 }
@@ -163,7 +168,7 @@ void ofApp::update(){
     gcc.update();
     
     float now = ofGetFrameNum() - startFrame;
-    //checkSequence(now);
+    checkSequence(now);
     
 }
 
@@ -177,7 +182,11 @@ void ofApp::checkSequence(int now){
         
         if(time == now){
             string cmd = s.cmd;
-            gcc.excute(cmd);
+            if(cmd == "take_photo"){
+                bSaveRequest = true;
+            }else{
+                gcc.excute(cmd);
+            }
             cout << cmd << endl;
         }
     }
@@ -229,36 +238,46 @@ void ofApp::keyPressed  (int key){
         
         switch(key){
             case 'H':
-                gcc.home(); 
+                gcc.home(true);
                 break;
             case OF_KEY_LEFT:
-                gcc.moveToX(gcc.targetPosition.x-1);
+                gcc.moveToX(gcc.targetPosition.x-1, true);
                 break;
                 
             case OF_KEY_RIGHT:
-                gcc.moveToX(gcc.targetPosition.x+1);
+                gcc.moveToX(gcc.targetPosition.x+1, true);
                 break;
                 
             case OF_KEY_UP:
-                gcc.moveToY(gcc.targetPosition.y+1);
+                gcc.moveToY(gcc.targetPosition.y+1, true);
                 break;
                 
             case OF_KEY_DOWN:
-                gcc.moveToY(gcc.targetPosition.y-1);
+                gcc.moveToY(gcc.targetPosition.y-1, true);
                 break;
 
             case '[':
-                gcc.moveToZ(gcc.targetPosition.z+1);
+                gcc.moveToZ(gcc.targetPosition.z+1, true);
                 break;
 
             case ']':
-                gcc.moveToZ(gcc.targetPosition.z-1);
+                gcc.moveToZ(gcc.targetPosition.z-1, true);
                 break;
 
             case OF_KEY_RETURN:
-                gcc.suck(!gcc.bSuck);
+                gcc.suck(!gcc.bSuck, true);
                 break;
             
+            case 'n':
+            {
+                Sequence & s = seq[currentSeq];
+                string cmd = s.cmd;
+                gcc.excute(cmd);
+                currentSeq++;
+                currentSeq = currentSeq % seq.size();
+                cout << cmd << endl;
+                break;
+            }
         }
     }
 

@@ -51,10 +51,10 @@ public:
         }
     }
 
-    string home(){
+    string home(bool excute=false){
         char c[255];
         int n = sprintf(c, "G28\n");
-        serial.writeBytes(c, n);
+        if(excute)serial.writeBytes(c, n);
         currentCommand = string(c);
         targetPosition = glm::vec3(0,0,0);
         return string(c);
@@ -62,40 +62,40 @@ public:
     
     // x : mm
     // speed : mm/min
-    string moveToX(int x, int speed=500){
+    string moveToX(int x, int speed=500, bool excute=false){
         char c[255];
         int n = sprintf(c, "G0 X%d F%d\n", x, speed);
-        serial.writeBytes(c, n);
+        if(excute) serial.writeBytes(c, n);
         targetPosition.x = x;
         targetSpeed = speed;
         return string(c);
     }
 
-    string moveToY(int y, int speed=500){
+    string moveToY(int y, int speed=500, bool excute=false){
         char c[255];
         int n = sprintf(c, "G0 Y%d F%d\n", y, speed);
-        serial.writeBytes(c, n);
+        if(excute) serial.writeBytes(c, n);
         targetPosition.y = y;
         targetSpeed = speed;
 
         return  string(c);
     }
 
-    string moveToZ(int z, int speed=150){
+    string moveToZ(int z, int speed=150, bool excute=false){
         char c[255];
         int n = sprintf(c, "G0 Z%d F%d\n", z, speed);
-        serial.writeBytes(c, n);
+        if(excute) serial.writeBytes(c, n);
         targetPosition.z = z;
         targetSpeed = speed;
 
         return string(c);
     }
     
-    string suck(bool on ){
+    string suck(bool on, bool excute=false ){
         char c[255];
         int v = on ? 190 : 0;
         int n = sprintf(c, "M104 S%d T0\n", v);
-        serial.writeBytes(c, n);
+        if(excute) serial.writeBytes(c, n);
         bSuck = on;
         return string(c);
     }

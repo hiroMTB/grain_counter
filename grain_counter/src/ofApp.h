@@ -54,5 +54,7 @@ public:
 
     
     int startFrame = 0;
+    
+    int currentSeq = 0;
 };
 
