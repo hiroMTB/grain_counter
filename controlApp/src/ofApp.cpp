@@ -104,14 +104,14 @@ void ofApp::generateSequence(){
             s.z(time, pos, 20, zSpeed);
             seq.push_back(s); time+=s.durSec;
             
-            // 8. go to drop down position
+            // 8. go to drop down position Y
+            s.y(time, pos, dropPos.y, xySpeed);
+            seq.push_back(s); time+=s.durSec;
+
+            // 9. go to drop down position X
             s.x(time, pos, dropPos.x, xySpeed);
             seq.push_back(s); time+=s.durSec;
 
-            // 9. go to drop down position
-            s.y(time, pos, dropPos.y, xySpeed);
-            seq.push_back(s); time+=s.durSec;
-            
             // 10. down
             s.z(time, pos, dropPos.z, zSpeed);
             seq.push_back(s); time+=s.durSec;
