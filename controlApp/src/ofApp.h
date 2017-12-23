@@ -3,19 +3,7 @@
 #include "ofMain.h"
 #include "GrainCounterController.h"
 #include "ofxHttpUtils.h"
-
-class Sequence{
-    
-public:
-    Sequence(){};
-    Sequence(float _time, string _cmd){
-        frame = _time * ofGetTargetFrameRate();
-        cmd = _cmd;
-    }
-    
-    int frame = 0;     // frame
-    string cmd = "";    // gcode
-};
+#include "Sequence.h"
 
 class ofApp : public ofBaseApp{
     
@@ -34,27 +22,26 @@ public:
     void newResponse(ofxHttpResponse & response);
     void uploadImage(string s);
     void exit();
-    
-    string command;
-    
+
+    // camera
     ofVideoGrabber vidGrabber;
-    ofTexture videoTexture;
-    int camWidth;
-    int camHeight;
+    bool bCamInit       = false;
+    bool bSaveRequest   = false;
+    int camWidth        = 320 * 2;
+    int camHeight       = 240 * 2;
 
     GrainCounterController gcc;
     
+    // web
     ofxHttpUtils httpUtils;
     string action_url;
     string address;
-    bool bSaveRequest = false;
 
-    
     vector<Sequence> seq;
-
-    
     int startFrame = 0;
-    
+    int currentFrame = 0;
     int currentSeq = 0;
+    string latestCommand;
+    bool bRunSequence = false;
 };
 

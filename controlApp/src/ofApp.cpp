@@ -1,5 +1,7 @@
 #include "ofApp.h"
 
+//#define UPLOAD_PHOTO 1
+
 static std::string randomIPv6() {
     
     std::string output;
@@ -23,129 +25,132 @@ static std::string randomIPv6() {
 void ofApp::setup(){
     ofSetVerticalSync(true);
     
-    ofBackground(255);
     ofSetFrameRate(30);
     ofSetLogLevel(OF_LOG_VERBOSE);
     
-    gcc.init("/dev/cu.usbmodem1411", 115200);
-    gcc.setRange(20,20,10);
     setupCamera();
     
+#ifdef UPLOAD_PHOTO
     action_url = "http://ingorandolf.info/sandgraincounter/upload.php";
     ofAddListener(httpUtils.newResponseEvent,this,&ofApp::newResponse);
     httpUtils.start();
-    
-    generateSequence();
-    
+#endif
     address = randomIPv6();
     
-    startFrame = ofGetFrameNum() + 30;
+
+    gcc.init("/dev/cu.usbmodem1411", 115200);
+    gcc.setRange(20,20,10);
+    generateSequence();
     
+    startFrame = ofGetFrameNum() + 30;
+
+    // Homing
+    sleep(1);
+    gcc.home();
+
 }
 
 void ofApp::generateSequence(){
 
+    glm::vec3 pickPos;
     glm::vec3 dropPos;
+    glm::vec3 pos(0,0,0);
     
-    float time = 3;
-    
-    // Homing
-    seq.push_back(Sequence(time, gcc.home()));
-    time = 10;
+    float time = 0;
     
     int row = 8;
     int col = 8;
-    int wait = 5;
+    int xySpeed = 10000;
+    int zSpeed = 150;
     
     for(int i=0; i<row; i++){
         for(int j=0; j<col; j++){
             
-            dropPos.x = 60 + (i*10);
-            dropPos.y = 137 - 40 - (j*10);
-            dropPos.z = 4;
+            pickPos.x =  50 + j*3;  // 40-80
+            pickPos.y = 125 + i*3;  // Y117 - Y157
+            pickPos.z = 4;
             
+            dropPos.x = 60 + j*10;
+            dropPos.y = 97 - i*10;
+            dropPos.z = 2;
             
             // 1. move Z up
-            seq.push_back(Sequence(time, gcc.moveToZ(20)) );
-            time += wait;
+            Sequence s;
+            s.z(time, pos, 20, zSpeed);
+            seq.push_back(s); time+=s.durSec;
             
             // 2. move X to the middle
-            seq.push_back(Sequence(time, gcc.moveToX(60)) ); // 40-80
-            time += wait;
+            s.x(time, pos, pickPos.x,xySpeed);;
+            seq.push_back(s); time+=s.durSec;
 
             // 3. move Y to the middle
-            seq.push_back(Sequence(time, gcc.moveToY(137)) ); // Y117 - Y157
-            time += wait;
-
-            // 4. down to grain
-            seq.push_back(Sequence(time, gcc.moveToZ(10)) ); // Z 10
-            time += wait;
+            s.y(time, pos, pickPos.y, xySpeed);;
+            seq.push_back(s); time+=s.durSec;
             
+            // 4. down to grain
+            s.z(time, pos, 10, zSpeed);
+            seq.push_back(s); time+=s.durSec;
+
             // 5. turn on pump
-            seq.push_back(Sequence(time, gcc.suck(true)) );
-            time += 1;
+            s.suck(time, true);
+            seq.push_back(s); time+=s.durSec;
             
             // 6. more closer to grain
-            seq.push_back(Sequence(time, gcc.moveToZ(4)) );
-            time += 2;
+            s.z(time, pos, 4, zSpeed);
+            seq.push_back(s); time+=s.durSec;
+            time += 1;
             
             // 7. lift up
-            seq.push_back(Sequence(time, gcc.moveToZ(20)) );
-            time += wait;
+            s.z(time, pos, 20, zSpeed);
+            seq.push_back(s); time+=s.durSec;
             
             // 8. go to drop down position
-            seq.push_back(Sequence(time, gcc.moveToX(dropPos.x)) );   // ? - ?
-            time += wait;
+            s.x(time, pos, dropPos.x, xySpeed);
+            seq.push_back(s); time+=s.durSec;
 
             // 9. go to drop down position
-            seq.push_back(Sequence(time, gcc.moveToY(dropPos.y)) );   // ? - ?
-            time += wait;
+            s.y(time, pos, dropPos.y, xySpeed);
+            seq.push_back(s); time+=s.durSec;
             
             // 10. down
-            seq.push_back(Sequence(time, gcc.moveToZ(2)) );   // ? - ?
-            time += wait;
+            s.z(time, pos, dropPos.z, zSpeed);
+            seq.push_back(s); time+=s.durSec;
 
             // 11. drop
-            seq.push_back(Sequence(time, gcc.suck(false)) );
-            time += 1;
-
+            s.suck(time, false);
+            seq.push_back(s); time+=s.durSec;
+            time+=1;
+            
             // 12. move up
-            seq.push_back(Sequence(time, gcc.moveToZ(15)) );
-            time += wait;
+            s.z(time, pos, 15, zSpeed);
+            seq.push_back(s); time+=s.durSec;
 
             // 13. cameara pos X
-            seq.push_back(Sequence(time, gcc.moveToX(gcc.targetPosition.x-40)) );
-            time += wait;
+            s.x(time, pos, pos.x-40, xySpeed);
+            seq.push_back(s); time+=s.durSec;
 
             // 14. cameara pos Y
-            seq.push_back(Sequence(time, gcc.moveToY(gcc.targetPosition.y-4)) );
-            time += wait;
+            s.y(time, pos, pos.y-4, xySpeed);
+            seq.push_back(s); time+=s.durSec;
             
             // 15. move down
-            seq.push_back(Sequence(time, gcc.moveToZ(2)) );
-            time += wait+4;
+            s.z(time, pos, 2, zSpeed);
+            seq.push_back(s); time+=s.durSec;
 
             // 16. take photo
-            seq.push_back(Sequence(time, "take_photo") );
-            time += 5;
-            
+            s.photo(time);
+            seq.push_back(s); time+=s.durSec;
         }
     }
-}
-
-float ofApp::calcWait(float posSt, float posEnd, float speed){
     
-    float dist = posEnd - posSt;
-    float waitTime = dist / speed;
-    waitTime += 0.5;
-    return waitTime;
-    
+    // print out sequence for check
+    for(Sequence & s : seq){
+       // printf("%04df, %03.1fsec : %s", s.frame, s.frame/ofGetTargetFrameRate(), s.cmd.c_str());
+    }
+    cout << endl;
 }
-
 
 void ofApp::setupCamera(){
-    camWidth  = 320 * 2;
-    camHeight = 240 * 2;
     
     //get back a list of devices.
     vector<ofVideoDevice> devices = vidGrabber.listDevices();
@@ -160,16 +165,17 @@ void ofApp::setupCamera(){
     
     vidGrabber.setDeviceID(15);
     vidGrabber.setDesiredFrameRate(30);
-    vidGrabber.initGrabber(camWidth, camHeight);
+    bCamInit = vidGrabber.initGrabber(camWidth, camHeight);
 }
 
 void ofApp::update(){
     vidGrabber.update();
     gcc.update();
     
-    float now = ofGetFrameNum() - startFrame;
-    checkSequence(now);
-    
+    if(bRunSequence){
+        checkSequence(currentFrame);
+        currentFrame++;
+    }
 }
 
 void ofApp::checkSequence(int now){
@@ -181,101 +187,116 @@ void ofApp::checkSequence(int now){
         float time = s.frame;
         
         if(time == now){
+            currentSeq = i;
             string cmd = s.cmd;
-            if(cmd == "take_photo"){
+            if(cmd == "take_photo\n"){
                 bSaveRequest = true;
             }else{
-                gcc.excute(cmd);
+                gcc.excute(s);
             }
-            cout << cmd << endl;
+            float now = currentFrame/ofGetTargetFrameRate();
+            printf("now %03.1fsec, scheduled %03.1fsec : %s", now, s.frame/ofGetTargetFrameRate(), s.cmd.c_str());
         }
     }
 }
 
-
 void ofApp::draw(){
     
     ofBackground(255);
-    
+    ofSetColor(255);
+
     ofPushMatrix();
     vidGrabber.draw(0,0, camWidth*2, camHeight*2);
     ofPopMatrix();
     
-    ofTranslate(18, 0);
-    // send section
-    //ofDrawBitmapString(command, 0, 50);
-    
-    // receive section
-    ofTranslate( 0, ofGetHeight()-30);
-    
-    
-    if(gcc.serial.isInitialized()){
-        //msg += "nBytes read " + ofToString(gcc.nBytesRead) + "\n";
-        //msg += "nTimes read " + ofToString(gcc.nTimesRead) + "\n";
-        //msg += "read: " + ofToString(gcc.bytesReadString) + "\n";
-        string msg1 = "position : " + ofToString(gcc.targetPosition.x) + ", " + ofToString(gcc.targetPosition.y) + ", " + ofToString(gcc.targetPosition.z) + "\n";
-        string msg2 = "IPv6     : " + address;
-        ofDrawBitmapString(msg1, 0, 0);
-        ofDrawBitmapString(msg2, 0, 20);
-    }else{
+    ofPushMatrix();{
+        ofTranslate(18, 0);
         
-    }
-
-    if(bSaveRequest){
+        // draw info
+        ofTranslate( 0, ofGetHeight()-30);
+        
+        if(gcc.serial.isInitialized()){
+            string msg1 = "position : " + ofToString(gcc.targetPos.x) + ", " + ofToString(gcc.targetPos.y) + ", " + ofToString(gcc.targetPos.z) + "\n";
+            string msg2 = "IPv6     : " + address;
+            ofDrawBitmapString(msg1, 0, 0);
+            ofDrawBitmapString(msg2, 0, 20);
+        }
+    } ofPopMatrix();
+    
+    if(bSaveRequest && bCamInit){
         string fileName(address+ ".png");
         ofSaveScreen( fileName );
+#ifdef UPLOAD_PHOTO
         uploadImage( fileName );
+#endif
         bSaveRequest = false;
         address = randomIPv6();
     }
-
+    
+    if(!bRunSequence){
+        string msg = "Press SPACE key to start pick & place sequences";
+        ofSetColor(255,0,0);
+        ofDrawBitmapString(msg, 18, 25);
+    }else{
+        string msg;
+        msg += "state : " + gcc.state + "\n";
+        msg += "speed : " + ofToString(gcc.targetSpeed)  + "\n";
+        msg += "gcode : " + ofToString(gcc.latestCmd);
+        msg += "read  : " + ofToString(gcc.bytesReadString) + "\n";
+        ofSetColor(255);
+        ofDrawBitmapString(msg, 18, 25);
+    }    
 }
 
 void ofApp::keyPressed  (int key){
 
+    if(key == ' '){
+        bRunSequence = !bRunSequence;
+    }
+    
     // serial
     if(gcc.serial.isInitialized()){
         
         switch(key){
             case 'H':
-                gcc.home(true);
+                gcc.home();
                 break;
             case OF_KEY_LEFT:
-                gcc.moveToX(gcc.targetPosition.x-1, true);
+                gcc.moveToX(gcc.targetPos.x-1);
                 break;
                 
             case OF_KEY_RIGHT:
-                gcc.moveToX(gcc.targetPosition.x+1, true);
+                gcc.moveToX(gcc.targetPos.x+1);
                 break;
                 
             case OF_KEY_UP:
-                gcc.moveToY(gcc.targetPosition.y+1, true);
+                gcc.moveToY(gcc.targetPos.y+1);
                 break;
                 
             case OF_KEY_DOWN:
-                gcc.moveToY(gcc.targetPosition.y-1, true);
+                gcc.moveToY(gcc.targetPos.y-1);
                 break;
 
             case '[':
-                gcc.moveToZ(gcc.targetPosition.z+1, true);
+                gcc.moveToZ(gcc.targetPos.z+1);
                 break;
 
             case ']':
-                gcc.moveToZ(gcc.targetPosition.z-1, true);
+                gcc.moveToZ(gcc.targetPos.z-1);
                 break;
 
             case OF_KEY_RETURN:
-                gcc.suck(!gcc.bSuck, true);
+                gcc.suck(!gcc.bSuck);
                 break;
             
             case 'n':
             {
                 Sequence & s = seq[currentSeq];
-                string cmd = s.cmd;
-                gcc.excute(cmd);
+                gcc.excute(s);
+                currentFrame = s.frame;
                 currentSeq++;
                 currentSeq = currentSeq % seq.size();
-                cout << cmd << endl;
+                cout << s.cmd << endl;
                 break;
             }
         }
@@ -284,13 +305,7 @@ void ofApp::keyPressed  (int key){
     // video
     switch(key){
         case 'S':
-        {
             bSaveRequest = true;
-            break;
-        }
-        
-        case 'U':
-            uploadImage("test.png");
             break;
     }
     
@@ -298,7 +313,6 @@ void ofApp::keyPressed  (int key){
 
 void ofApp::newResponse(ofxHttpResponse & response){
     cout << response.responseBody << endl;
-    
 }
 
 void ofApp::uploadImage(string fileName){

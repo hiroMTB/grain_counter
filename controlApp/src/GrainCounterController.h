@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "ofMain.h"
 #include "ofRange.h"
+#include "Sequence.h"
 
 class GrainCounterController{
 
@@ -29,6 +30,8 @@ public:
     }
     
     void update(){
+        
+        //  read incoming serial message
         if ( serial.isInitialized() ){
             nTimesRead = 0;
             nBytesRead = 0;
@@ -50,65 +53,97 @@ public:
             readTime = ofGetElapsedTimef();
         }
     }
-
-    string home(bool excute=false){
+    
+    static string makeGcode(SeqType type, int val, int speed ){
         char c[255];
-        int n = sprintf(c, "G28\n");
-        if(excute)serial.writeBytes(c, n);
-        currentCommand = string(c);
-        targetPosition = glm::vec3(0,0,0);
+        
+        switch(type){
+            case HOME:   sprintf(c, "G28\n"); break;
+            case MOVE_X: sprintf(c, "G0 X%d F%d\n", val, speed); break;
+            case MOVE_Y: sprintf(c, "G0 Y%d F%d\n", val, speed); break;
+            case MOVE_Z: sprintf(c, "G0 Z%d F%d\n", val, speed); break;
+            case SUCK:   sprintf(c, "M104 S%d T0\n",val?190:0);  break;
+            case PHOTO:  sprintf(c, "take_photo\n");  break;
+        }
+        
         return string(c);
+    }
+
+    void home(){
+        excute(makeGcode(HOME, 0,0));
+        targetPos = glm::vec3(0,0,0);
     }
     
     // x : mm
     // speed : mm/min
-    string moveToX(int x, int speed=500, bool excute=false){
-        char c[255];
-        int n = sprintf(c, "G0 X%d F%d\n", x, speed);
-        if(excute) serial.writeBytes(c, n);
-        targetPosition.x = x;
-        targetSpeed = speed;
-        return string(c);
+    void moveToX(int x, int speed=1000){
+        excute(makeGcode(MOVE_X, x, speed));
+        targetPos.x = x;
     }
 
-    string moveToY(int y, int speed=500, bool excute=false){
-        char c[255];
-        int n = sprintf(c, "G0 Y%d F%d\n", y, speed);
-        if(excute) serial.writeBytes(c, n);
-        targetPosition.y = y;
-        targetSpeed = speed;
-
-        return  string(c);
+    void moveToY(int y, int speed=1000){
+        excute(makeGcode(MOVE_Y, y, speed));
+        targetPos.y = y;
     }
 
-    string moveToZ(int z, int speed=150, bool excute=false){
-        char c[255];
-        int n = sprintf(c, "G0 Z%d F%d\n", z, speed);
-        if(excute) serial.writeBytes(c, n);
-        targetPosition.z = z;
-        targetSpeed = speed;
-
-        return string(c);
+    void moveToZ(int z, int speed=150){
+        excute(makeGcode(MOVE_Z, z, speed));
+        targetPos.z = z;
     }
     
-    string suck(bool on, bool excute=false ){
-        char c[255];
-        int v = on ? 190 : 0;
-        int n = sprintf(c, "M104 S%d T0\n", v);
-        if(excute) serial.writeBytes(c, n);
+    void suck(bool on){
+        excute(makeGcode(SUCK, 1, 0));
         bSuck = on;
-        return string(c);
+    }
+    
+    void excute(const Sequence & s){
+        if(serial.isInitialized()){
+            serial.writeBytes(s.cmd.c_str(), s.cmd.size());
+        
+            latestCmd = s.cmd;
+            targetSpeed = s.speed;
+            
+            switch(s.type){
+                case HOME:
+                    state = "Homing...";
+                    break;
+                case MOVE_X:
+                    state = "moving x";
+                    targetPos.x = s.endVal;
+                    break;
+                case MOVE_Y:
+                    state = "moving y";
+                    targetPos.y = s.endVal;
+                    break;
+                case MOVE_Z:
+                    state = "moving z";
+                    targetPos.z = s.endVal;
+                    break;
+                case SUCK:
+                    bSuck = s.endVal;
+                    state = bSuck ? "pump on" : "pump off";
+                    break;
+                    
+                case PHOTO:
+                    state = "taking photo";
+                    break;
+            }
+        }
     }
     
     void excute(string cmd){
-        serial.writeBytes(cmd.c_str(), cmd.size());
+        if(serial.isInitialized()){
+            serial.writeBytes(cmd.c_str(), cmd.size());
+        }
     }
     
-    
     ofRange xRange, yRange, zRange;
-    glm::vec3 targetPosition;
+
+    glm::vec3 targetPos;
     float targetSpeed;
     bool bSuck = false;
+    string state;
+    string latestCmd;
     
     ofSerial	serial;
     bool		bSendSerialMessage = false;
@@ -117,7 +152,5 @@ public:
     int			nBytesRead;
     int			nTimesRead;
     float		readTime;
-    
-    string currentCommand;
     
 };
