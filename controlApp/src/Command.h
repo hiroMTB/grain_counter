@@ -4,7 +4,7 @@
 
 using namespace std;
 
-class PPMachine;
+class Machine;
 
 struct Command{
     Command(float _timeSec){
@@ -25,40 +25,40 @@ struct Command{
 
 struct HomeCommand : Command{
 
-    HomeCommand(PPMachine & _m, float _timeSec)
+    HomeCommand(Machine & _m, float _timeSec)
     :Command(timeSec = _timeSec), m(_m){
         durSec = 10;
         cmd = "G28\n";
         return true;
     }
     
-    PPMachine & m;
+    Machine & m;
     bool call() const override{
         m.execute(cmd);
         m.targetPos = glm::vec3(0,0,0);
         m.currentPos = glm::vec3(0,0,0);
         m.originalPos = glm::vec3(0,0,0);
         m.targetSpeed = 0;
-        m.state = PPMachine::State::HOME;
+        m.state = Machine::State::HOME;
         return true;
     }
 };
 
 struct SuckCommand : Command{
-    SuckCommand(PPMachine & _m, float _timeSec, glm::vec3 _pos, bool _on)
+    SuckCommand(Machine & _m, float _timeSec, glm::vec3 _pos, bool _on)
     :Command(_timeSec),m(_m),pos(_pos),on(_on){
         durSec = 0.5;
         cmd = on ? "M104 S190 T0\n" : "M104 S0 T0\n";
     }
     
-    PPMachine & m;
+    Machine & m;
     glm::vec3 pos;
     bool on;
     bool call() const override{
         if(m.bSuck != on){
             m.execute(cmd);
             m.bSuck = on;
-            m.state = PPMachine::State::SUCK;
+            m.state = Machine::State::SUCK;
             return true;
         }
         return false;
@@ -67,16 +67,16 @@ struct SuckCommand : Command{
 
 struct PhotoCommand : Command{
 
-    PhotoCommand(PPMachine & _m, float _timeSec, glm::vec3 _pos)
+    PhotoCommand(Machine & _m, float _timeSec, glm::vec3 _pos)
     :Command(_timeSec), m(_m), pos(_pos){
         durSec = 1;
         cmd = "take_photo\n";
     }
-    PPMachine & m;
+    Machine & m;
     glm::vec3 pos;
     bool call() const override{
         // m.takephoto();
-        m.state = PPMachine::State::PHOTO;
+        m.state = Machine::State::PHOTO;
         return true;
     }
 };
@@ -85,7 +85,7 @@ struct MoveCommand : Command{
 
     enum AxisType{AXIS_X, AXIS_Y, AXIS_Z};
     
-    MoveCommand(PPMachine & _m, AxisType _type, float _timeSec, glm::vec3 _stPos, int _endVal, int _speed)
+    MoveCommand(Machine & _m, AxisType _type, float _timeSec, glm::vec3 _stPos, int _endVal, int _speed)
     :Command(_timeSec), m(_m), type(_type), stPos(_stPos), endVal(_endVal), speed(_speed)
     {
         // make gcode, calc dist, speed
@@ -114,7 +114,7 @@ struct MoveCommand : Command{
         durSec = (dist/speed) * 60.0f +  0.1;
     }
 
-    PPMachine & m;
+    Machine & m;
     AxisType type;
     glm::vec3 stPos;
     glm::vec3 endPos;
@@ -134,16 +134,16 @@ struct MoveCommand : Command{
         switch(type){
             case AXIS_X:
                 m.targetPos.x = endVal;
-                m.state = PPMachine::State::MOVE_X;
+                m.state = Machine::State::MOVE_X;
                 break;
             case AXIS_Y:
                 m.targetPos.y = endVal;
-                m.state = PPMachine::State::MOVE_Y;
+                m.state = Machine::State::MOVE_Y;
                 break;
                 
             case AXIS_Z:
                 m.targetPos.z = endVal;
-                m.state = PPMachine::State::MOVE_Z;
+                m.state = Machine::State::MOVE_Z;
                 break;
         }
         

@@ -6,10 +6,10 @@
 
 class Command;
 
-class PPMachine{
+class Machine{
     
 public:
-    PPMachine();
+    Machine();
     
     void init(string name="/dev/cu.usbmodem1421", int baud=115200);
     void setRange(int xMax, int yMax, int zMax);

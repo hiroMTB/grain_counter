@@ -1,32 +1,32 @@
-#include "PPMachine.h"
+#include "Machine.h"
 #include "Command.h"
 
-PPMachine::PPMachine(){
+Machine::Machine(){
     path.setMode(OF_PRIMITIVE_LINE_STRIP);
     dot.setMode(OF_PRIMITIVE_POINTS);
 };
 
-void PPMachine::init(string name, int baud){
+void Machine::init(string name, int baud){
     serial.listDevices();
     vector <ofSerialDeviceInfo> deviceList = serial.getDeviceList();
     
     serial.setup(name, baud);
 }
 
-void PPMachine::setRange(int xMax, int yMax, int zMax){
+void Machine::setRange(int xMax, int yMax, int zMax){
     xRange.set(0,xMax);
     yRange.set(0,yMax);
     zRange.set(0,zMax);
 }
 
-void PPMachine::execute(string cmd){
+void Machine::execute(string cmd){
     if(serial.isInitialized()){
         serial.writeBytes(cmd.c_str(), cmd.size());
     }
     latestCmd = cmd;
 }
 
-void PPMachine::makePath(vector<shared_ptr<Command>> cmds){
+void Machine::makePath(vector<shared_ptr<Command>> cmds){
     
     path.addVertex(glm::vec3(0,0,0));
     path.addColor(ofFloatColor(0,0,0));
@@ -54,7 +54,7 @@ void PPMachine::makePath(vector<shared_ptr<Command>> cmds){
     }
 }
 
-void PPMachine::update(){
+void Machine::update(){
     // simulate current position
     if(state == MOVE_X || state == MOVE_Y || state == MOVE_Z){
         float dist = glm::distance(currentPos, targetPos);
@@ -72,7 +72,7 @@ void PPMachine::update(){
     }
 }
 
-void PPMachine::draw(int x, int y){
+void Machine::draw(int x, int y){
 
     ofSetLineWidth(1);
     glPointSize(3);
@@ -100,7 +100,7 @@ void PPMachine::draw(int x, int y){
 
 }
 
-void PPMachine::scene(){
+void Machine::scene(){
 
     ofPushMatrix(); {
         

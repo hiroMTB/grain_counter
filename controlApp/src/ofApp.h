@@ -2,7 +2,7 @@
 
 #include "ofMain.h"
 #include "ofxHttpUtils.h"
-#include "PPMachine.h"
+#include "Machine.h"
 
 class Command;
 
@@ -10,19 +10,19 @@ class ofApp : public ofBaseApp{
     
 public:
     void setup();
-    void setupSerial();
-    void setupCamera();
-    void generateSequence();
-    void takePhoto(bool upload=true);
-    void checkSequence(int frame);
-    float calcWait(float posSt, float posEnd, float speed);
-    
     void update();
     void draw();
     void keyPressed(int key);
+    void exit();
+
+    void setupSerial();
+    void setupCamera();
+    void generateSequence();
+    void drawInfo();
+    void takePhoto(bool upload=true);
+    void checkSequence(int frame);
     void newResponse(ofxHttpResponse & response);
     void uploadImage(string s);
-    void exit();
 
     // helper func
     void addCommand(float &time, shared_ptr<Command> m);
@@ -49,7 +49,7 @@ public:
     int currentCmd = 0;
     bool bRunSequence = false;
 
-    PPMachine machine;
+    Machine machine;
     vector<shared_ptr<Command>> cmds;
 };
 
