@@ -1,9 +1,10 @@
 #pragma once
 
 #include "ofMain.h"
-#include "GrainCounterController.h"
 #include "ofxHttpUtils.h"
-#include "Sequence.h"
+#include "PPMachine.h"
+
+class Command;
 
 class ofApp : public ofBaseApp{
     
@@ -23,25 +24,32 @@ public:
     void uploadImage(string s);
     void exit();
 
+    // helper func
+    void addCommand(float &time, shared_ptr<Command> m);
+    void addMoveX(float &time, glm::vec3 &pos, int endPos, int speed);
+    void addMoveY(float &time, glm::vec3 &pos, int endPos, int speed);
+    void addMoveZ(float &time, glm::vec3 &pos, int endPos, int speed);
+    void addSuck (float &time, glm::vec3 &pos, bool on);
+    void addPhoto(float &time, glm::vec3 &pos);
+    
     // camera
     ofVideoGrabber vidGrabber;
     bool bCamInit       = false;
     bool bSaveRequest   = false;
     int camWidth        = 320 * 2;
     int camHeight       = 240 * 2;
-
-    GrainCounterController gcc;
     
     // web
     ofxHttpUtils httpUtils;
     string action_url;
     string address;
 
-    vector<Sequence> seq;
     int startFrame = 0;
     int currentFrame = 0;
-    int currentSeq = 0;
-    string latestCommand;
+    int currentCmd = 0;
     bool bRunSequence = false;
+
+    PPMachine machine;
+    vector<shared_ptr<Command>> cmds;
 };
 
