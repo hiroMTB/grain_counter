@@ -20,13 +20,14 @@ void Machine::setRange(int xMax, int yMax, int zMax){
 }
 
 void Machine::execute(string cmd){
+
     if(serial.isInitialized()){
         serial.writeBytes(cmd.c_str(), cmd.size());
     }
     latestCmd = cmd;
 }
 
-void Machine::makePath(vector<shared_ptr<Command>> cmds){
+void Machine::makeVbo(vector<shared_ptr<Command>> cmds){
     
     path.addVertex(glm::vec3(0,0,0));
     path.addColor(ofFloatColor(0,0,0));
@@ -63,11 +64,11 @@ void Machine::update(){
         float speedPerFrame = targetSpeed/60.0f/ofGetTargetFrameRate();
         glm::vec3 adder = dir * speedPerFrame;
         
-        if(speedPerFrame<=dist){
+        if(speedPerFrame<dist){
             currentPos += adder;
         }else{
             currentPos = targetPos;
-            state == IDLE;
+            state = IDLE;
         }
     }
 }
@@ -76,7 +77,7 @@ void Machine::draw(int x, int y){
 
     ofSetLineWidth(1);
     glPointSize(3);
-    float pad = 6;
+    float pad = 4;
     
     ofRectangle vp(x, y, xRange.span()+pad, yRange.span()+pad);
     cam.begin(vp);

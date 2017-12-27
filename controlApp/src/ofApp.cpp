@@ -23,7 +23,7 @@ void ofApp::setup(){
     machine.init("/dev/cu.usbmodem1411", 115200);
     machine.setRange(200,200,100);
     generateSequence();
-    machine.makePath(cmds);
+    machine.makeVbo(cmds);
     
     startFrame = ofGetFrameNum() + 30;
 
@@ -43,17 +43,17 @@ void ofApp::generateSequence(){
     
     int row = 8;
     int col = 8;
-    int xySpeed = 500;
+    int xySpeed = 1000;
     int zSpeed = 150;
     
     for(int i=0; i<row; i++){
         for(int j=0; j<col; j++){
             
             pickPos.x =  50 + j*3;  // 40-80
-            pickPos.y = 125 + i*4;  // Y117 - Y157
+            pickPos.y = 125 + i*3;  // Y117 - Y157
             pickPos.z = 4;
             
-            dropPos.x = 60 + j*15.5;
+            dropPos.x = 60 + j*10;
             dropPos.y = 97 - i*10;
             dropPos.z = 2;
             
@@ -92,22 +92,26 @@ void ofApp::generateSequence(){
             addSuck(time, pos, false);
             time+=1;
             
-            // 12. move up
-            addMoveZ(time, pos, 15, zSpeed);
-
-            // 13. cameara pos X
-            addMoveX(time, pos, dropPos.x-40, xySpeed);
-
-            // 14. cameara pos Y
-            addMoveY(time, pos, dropPos.y-4, xySpeed);
-            
-            // 15. move down
-            addMoveZ(time, pos, 2, zSpeed);
-
-            // 16. take photo
-            addPhoto(time, pos);
+            if(0){
+                // 12. move up
+                addMoveZ(time, pos, 15, zSpeed);
+                
+                // 13. cameara pos X
+                addMoveX(time, pos, dropPos.x-40, xySpeed);
+                
+                // 14. cameara pos Y
+                addMoveY(time, pos, dropPos.y-4, xySpeed);
+                
+                // 15. move down
+                addMoveZ(time, pos, 2, zSpeed);
+                
+                // 16. take photo
+                addPhoto(time, pos);
+            }
         }
     }
+    
+    totalSec = time;
     
     // print out sequence for check & save to txt file
     ofstream file(ofToDataPath("gcode.txt", true));
@@ -189,10 +193,11 @@ void ofApp::draw(){
         bSaveRequest = false;
         address = randomIPv6();
     }
-    drawInfo();
+    
+    drawInfo(22, 22);
+    
+    machine.draw(ofGetWidth()-222, 20);
 }
-
-
 
 void ofApp::newResponse(ofxHttpResponse & response){
     cout << response.responseBody << endl;

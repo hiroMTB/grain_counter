@@ -18,7 +18,7 @@ public:
     void setupSerial();
     void setupCamera();
     void generateSequence();
-    void drawInfo();
+    void drawInfo(int x, int y);
     void takePhoto(bool upload=true);
     void checkSequence(int frame);
     void newResponse(ofxHttpResponse & response);
@@ -44,12 +44,15 @@ public:
     string action_url;
     string address;
 
+    // machine & command sequence
+    Machine machine;
+    vector<shared_ptr<Command>> cmds;
+
+    bool bRunSequence = false;
     int startFrame = 0;
     int currentFrame = 0;
     int currentCmd = 0;
-    bool bRunSequence = false;
+    float totalSec = 0;
 
-    Machine machine;
-    vector<shared_ptr<Command>> cmds;
 };
 

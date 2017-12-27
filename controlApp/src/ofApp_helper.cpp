@@ -29,7 +29,7 @@ void ofApp::addPhoto(float &time, glm::vec3 & pos){
 }
 
 
-void ofApp::drawInfo(){
+void ofApp::drawInfo(int x, int y){
     if(!bRunSequence){
         string msg = "After HOMING,\nPress SPACE key to start a sequence";
         ofSetColor(255,0,0);
@@ -40,20 +40,18 @@ void ofApp::drawInfo(){
         string msg;
         msg += "frame      : " + ofToString(currentFrame) + "\n";
         msg += "sec        : " + ofToString(currentFrame/ofGetTargetFrameRate(),1) + "\n";
-        msg += "state      : " + machine.stateStr + "\n";
+        msg += "totalTime  : " + ofToString(totalSec/60,1) + " min\n";        
+        msg += "state      : " + machine.stateStr[machine.state] + "\n";
+        msg += "error      : " + machine.errorMsg + "\n";
         msg += "pump       : " + ofToString(machine.bSuck ? "ON":"OFF") + "\n";
         msg += "speed      : " + ofToString(machine.targetSpeed)  + "\n";
-        msg += "targetPos  : " + ofToString(machine.targetPos)  + "\n";
-        msg += "currentPos : " + ofToString(machine.currentPos)  + "\n";
-        //msg += "originalPos : " + ofToString(machine.originalPos)  + "\n";
-        
+        msg += "targetPos  : " + ofToString(machine.targetPos,0)  + "\n";
+        msg += "currentPos : " + ofToString(machine.currentPos,0)  + "\n";        
         msg += "gcode      : " + machine.latestCmd + "\n";
         //msg += "read  : " + ofToString(machine.bytesReadString) + "\n";
         ofSetColor(255);
-        ofDrawBitmapString(msg, 18, 25);
-    }
-    
-    machine.draw(ofGetWidth()-220, 30);
+        ofDrawBitmapString(msg, x, y);
+    }    
 }
 
 static std::string randomIPv6() {

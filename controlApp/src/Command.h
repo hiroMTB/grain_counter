@@ -40,6 +40,7 @@ struct HomeCommand : Command{
         m.originalPos = glm::vec3(0,0,0);
         m.targetSpeed = 0;
         m.state = Machine::State::HOME;
+        m.errorMsg = "";
         return true;
     }
 };
@@ -59,6 +60,7 @@ struct SuckCommand : Command{
             m.execute(cmd);
             m.bSuck = on;
             m.state = Machine::State::SUCK;
+            m.errorMsg = "";
             return true;
         }
         return false;
@@ -77,6 +79,7 @@ struct PhotoCommand : Command{
     bool call() const override{
         // m.takephoto();
         m.state = Machine::State::PHOTO;
+        m.errorMsg = "";
         return true;
     }
 };
@@ -125,28 +128,40 @@ struct MoveCommand : Command{
     
     bool call() const override {
 
+        if(!checkRange()){
+            m.errorMsg = "target position is out of range";
+            ofLogError("MoveCommand", m.errorMsg);
+            return false;
+        }
+        
+        if(m.state == Machine::State::MOVE_X
+           || m.state == Machine::State::MOVE_Y
+           || m.state == Machine::State::MOVE_Z){
+            m.errorMsg = "machine is moving, command ignored";
+            ofLogNotice("MoveCommand", m.errorMsg);
+            return false;
+        }
+        
         m.execute(cmd);
         m.targetSpeed = speed;
         
         m.originalPos = stPos;
-        m.targetPos = stPos;
-
+        m.currentPos = stPos;
+        m.targetPos = endPos;
         switch(type){
-            case AXIS_X:
-                m.targetPos.x = endVal;
-                m.state = Machine::State::MOVE_X;
-                break;
-            case AXIS_Y:
-                m.targetPos.y = endVal;
-                m.state = Machine::State::MOVE_Y;
-                break;
-                
-            case AXIS_Z:
-                m.targetPos.z = endVal;
-                m.state = Machine::State::MOVE_Z;
-                break;
+            case AXIS_X: m.state = Machine::State::MOVE_X; break;
+            case AXIS_Y: m.state = Machine::State::MOVE_Y; break;
+            case AXIS_Z: m.state = Machine::State::MOVE_Z; break;
         }
         
+        m.errorMsg = "";
         return true;
+    }
+    
+    bool checkRange() const {
+        bool insidex = m.xRange.contains(endPos.x);
+        bool insidey = m.yRange.contains(endPos.y);
+        bool insidez = m.zRange.contains(endPos.z);
+        return insidex && insidey && insidez;
     }
 };
