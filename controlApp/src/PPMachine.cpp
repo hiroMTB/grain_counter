@@ -36,8 +36,8 @@ void PPMachine::makePath(vector<shared_ptr<Command>> cmds){
         shared_ptr<MoveCommand> m = dynamic_pointer_cast<MoveCommand>(cmd);
         if(m){
             glm::vec3 p = m->endPos;
-            p.y = -p.y;
-            p.z = 0;
+            //p.y = -p.y;
+            //p.z = 0;
             path.addVertex(p);
             path.addColor(ofFloatColor(0,0,0));
         }else{
@@ -45,8 +45,8 @@ void PPMachine::makePath(vector<shared_ptr<Command>> cmds){
             if(m){
                 
                 glm::vec3 p = m->pos;
-                p.y = -p.y;
-                p.z = 0;
+                //p.y = -p.y;
+                //p.z = 0;
                 dot.addVertex(p);
                 dot.addColor(ofFloatColor(0,0,1));
             }
@@ -72,61 +72,53 @@ void PPMachine::update(){
     }
 }
 
-void PPMachine::draw(){
-    
-    
+void PPMachine::draw(int x, int y){
+
     ofSetLineWidth(1);
+    glPointSize(3);
+    float pad = 6;
     
-    // XY view
-    ofSetColor(0);
+    ofRectangle vp(x, y, xRange.span()+pad, yRange.span()+pad);
+    cam.begin(vp);
     ofNoFill();
-    ofRectangle rect(glm::vec2(xRange.min, yRange.min), glm::vec2(xRange.max, yRange.max));
-    ofDrawRectangle(rect);
+    ofSetColor(0);
+    ofDrawRectangle(pad/2,pad/2,vp.width-pad, vp.height-pad);
+    ofScale(1,-1,1);
+    ofTranslate(pad/2, -yRange.span()-pad/2);
+    scene();
+    cam.end();
     
+    ofRectangle vp2(x, y+yRange.span()+20, xRange.span()+pad, zRange.span()+pad);
+    cam.begin(vp2);
+    ofNoFill();
+    ofSetColor(0);
+    ofDrawRectangle(pad/2,pad/2,vp2.width-pad, vp2.height-pad);
+    ofRotateXDeg(90);
+    ofTranslate(pad/2, 0, -zRange.span()-pad/2);
+    scene();
+    cam.end();
+
+}
+
+void PPMachine::scene(){
+
     ofPushMatrix(); {
-        ofTranslate(0, yRange.span());
         
         // future path
         path.draw();
         
-        // suck point
-        glPointSize(3);
+        // pump on/off point
         dot.draw();
         
         ofSetColor(255,0,0);
-        ofDrawLine(originalPos.x, -originalPos.y, targetPos.x, -targetPos.y);
+        ofDrawLine(currentPos, targetPos);
         
         ofNoFill();
         ofSetColor(255,0,0);
-        ofDrawCircle(targetPos.x, -targetPos.y, 5);
+        ofDrawSphere(targetPos, 2);
         
         ofFill();
         ofSetColor(255,0,0);
-        ofDrawCircle(currentPos.x, -currentPos.y, 3);
-    } ofPopMatrix();
-    
-    
-    // XZ view
-    ofPushMatrix();{
-        ofTranslate(0, yRange.span()+10);
-        
-        ofNoFill();
-        ofSetColor(0);
-        ofRectangle rectZ(glm::vec2(xRange.min, zRange.min), glm::vec2(xRange.max, zRange.max));
-        ofDrawRectangle(rectZ);
-
-        ofTranslate(0, zRange.span());
-
-        ofSetColor(255,0,0);
-        ofDrawLine(originalPos.x, -originalPos.z, targetPos.x, -targetPos.z);
-        
-        ofNoFill();
-        ofSetColor(255,0,0);
-        ofDrawCircle(targetPos.x, -targetPos.z, 5);
-        
-        ofFill();
-        ofSetColor(255,0,0);
-        ofDrawCircle(currentPos.x, -currentPos.z, 3);
-        
-    }ofPopMatrix();
+        ofDrawSphere(currentPos, 2);
+    }
 }

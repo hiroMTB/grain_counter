@@ -91,6 +91,7 @@
 		84483A3C1FF2E33800E14671 /* Command.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Command.h; sourceTree = "<group>"; };
 		84483A3D1FF2E5E000E14671 /* PPMachine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PPMachine.h; sourceTree = "<group>"; };
 		84483A3E1FF31B7100E14671 /* PPMachine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PPMachine.cpp; sourceTree = "<group>"; };
+		848D95FE1FF33B0E0079EDBA /* OrthoCam.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OrthoCam.h; sourceTree = "<group>"; };
 		8A1254FD4FD7284078EEE55E /* x509.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = x509.h; path = ../../../addons/ofxPoco/libs/openssl/include/openssl/x509.h; sourceTree = SOURCE_ROOT; };
 		8B1E1E0F1F7DF006BF6F4E80 /* dsa.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = dsa.h; path = ../../../addons/ofxPoco/libs/openssl/include/openssl/dsa.h; sourceTree = SOURCE_ROOT; };
 		92DCDDA927483519F8C33033 /* ssl23.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = ssl23.h; path = ../../../addons/ofxPoco/libs/openssl/include/openssl/ssl23.h; sourceTree = SOURCE_ROOT; };
@@ -350,6 +351,7 @@
 				84483A3C1FF2E33800E14671 /* Command.h */,
 				84483A3D1FF2E5E000E14671 /* PPMachine.h */,
 				84483A3E1FF31B7100E14671 /* PPMachine.cpp */,
+				848D95FE1FF33B0E0079EDBA /* OrthoCam.h */,
 			);
 			path = src;
 			sourceTree = SOURCE_ROOT;

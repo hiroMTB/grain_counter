@@ -61,7 +61,7 @@ void ofApp::generateSequence(){
     
     int row = 8;
     int col = 8;
-    int xySpeed = 10000;
+    int xySpeed = 500;
     int zSpeed = 150;
     
     for(int i=0; i<row; i++){
@@ -187,11 +187,6 @@ void ofApp::draw(){
     vidGrabber.draw(0,0, camWidth*2, camHeight*2);
     ofPopMatrix();
     
-    ofPushMatrix();
-    ofTranslate(ofGetWidth()-220, 20);
-    machine.draw();
-    ofPopMatrix();
-    
     ofPushMatrix();{
         ofTranslate(18, 0);
         
@@ -219,7 +214,7 @@ void ofApp::draw(){
     if(!bRunSequence){
         string msg = "After HOMING,\nPress SPACE key to start a sequence";
         ofSetColor(255,0,0);
-        ofDrawBitmapString(msg, ofGetWidth()/2-100, ofGetHeight()/2);
+        ofDrawBitmapString(msg, ofGetWidth()/2-120, ofGetHeight()/2);
     }
     
     {
@@ -237,7 +232,9 @@ void ofApp::draw(){
         //msg += "read  : " + ofToString(machine.bytesReadString) + "\n";
         ofSetColor(255);
         ofDrawBitmapString(msg, 18, 25);
-    }    
+    }
+    
+    machine.draw(ofGetWidth()-220, 20);
 }
 
 void ofApp::keyPressed  (int key){

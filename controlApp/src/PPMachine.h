@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include "ofRange.h"
+#include "OrthoCam.h"
 
 class Command;
 
@@ -15,7 +16,8 @@ public:
     void execute(string cmd);
     void makePath(vector<shared_ptr<Command>> cmds);
     void update();
-    void draw();
+    void draw(int x, int y);
+    void scene();
 
     enum State{IDLE, HOME, MOVE_X, MOVE_Y, MOVE_Z, SUCK, PHOTO};
 
@@ -39,4 +41,5 @@ public:
     ofVboMesh path;
     ofVboMesh dot;
     
+    OrthoCam cam;
 };
