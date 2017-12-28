@@ -9,14 +9,25 @@ Machine::Machine(){
 void Machine::init(string name, int baud){
     serial.listDevices();
     vector <ofSerialDeviceInfo> deviceList = serial.getDeviceList();
-    
     serial.setup(name, baud);
+    reset();
 }
 
 void Machine::setRange(int xMax, int yMax, int zMax){
     xRange.set(0,xMax);
     yRange.set(0,yMax);
     zRange.set(0,zMax);
+}
+
+void Machine::reset(){
+    latestCmd = "";
+    errorMsg = "";
+    state = IDLE;
+    targetPos = glm::vec3(0,0,0);
+    currentPos = glm::vec3(0,0,0);
+    originalPos = glm::vec3(0,0,0);
+    targetSpeed = 0;
+    bSuck = false;
 }
 
 void Machine::execute(string cmd){
@@ -79,6 +90,7 @@ void Machine::draw(int x, int y){
     glPointSize(3);
     float pad = 4;
     
+    // draw XY plane
     ofRectangle vp(x, y, xRange.span()+pad, yRange.span()+pad);
     cam.begin(vp);
     ofNoFill();
@@ -87,8 +99,14 @@ void Machine::draw(int x, int y){
     ofScale(1,-1,1);
     ofTranslate(pad/2, -yRange.span()-pad/2);
     scene();
+    if(bSuck){
+        ofSetColor(255,0,0);
+        ofNoFill();
+        ofDrawCircle(currentPos, 5);
+    }
     cam.end();
     
+    // draw XZ plane
     ofRectangle vp2(x, y+yRange.span()+20, xRange.span()+pad, zRange.span()+pad);
     cam.begin(vp2);
     ofNoFill();
@@ -98,28 +116,25 @@ void Machine::draw(int x, int y){
     ofTranslate(pad/2, 0, -zRange.span()-pad/2);
     scene();
     cam.end();
-
 }
 
 void Machine::scene(){
 
-    ofPushMatrix(); {
-        
-        // future path
-        path.draw();
-        
-        // pump on/off point
-        dot.draw();
-        
-        ofSetColor(255,0,0);
-        ofDrawLine(currentPos, targetPos);
-        
-        ofNoFill();
-        ofSetColor(255,0,0);
-        ofDrawSphere(targetPos, 2);
-        
-        ofFill();
-        ofSetColor(255,0,0);
-        ofDrawSphere(currentPos, 2);
-    }
+    // future path
+    path.draw();
+    
+    // pump on/off point
+    dot.draw();
+    
+    ofSetColor(255,0,0);
+    ofDrawLine(currentPos, targetPos);
+    
+    ofFill();
+    ofSetColor(255,0,0);
+    ofDrawSphere(targetPos, 2);
+    
+    ofFill();
+    ofSetColor(255,0,0);
+    ofDrawSphere(currentPos, 2);
+    
 }

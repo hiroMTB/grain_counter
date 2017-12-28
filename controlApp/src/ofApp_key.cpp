@@ -1,5 +1,23 @@
 void ofApp::keyPressed(int key){
     
+    // video
+    switch(key){
+        case 'S':
+            bSaveRequest = true;
+            break;
+        case 'F':
+            ofToggleFullscreen();
+            break;
+        case ' ':
+            bRunSequence = !bRunSequence;
+            break;
+        case 'M':
+            bShowManual = !bShowManual;
+            break;
+    }
+    
+    if(bRunSequence) return;
+    
     // machine manual control
     glm::vec3 cp = machine.currentPos;
     glm::vec3 tp = machine.targetPos;
@@ -61,7 +79,7 @@ void ofApp::keyPressed(int key){
             break;
         }
             
-        case 'n':
+        case 'N':
         {
             shared_ptr<Command> command = cmds[currentCmd];
             command->call();
@@ -72,17 +90,5 @@ void ofApp::keyPressed(int key){
             break;
         }
     }
-    
-    // video
-    switch(key){
-        case 'S':
-            bSaveRequest = true;
-            break;
-        case 'F':
-            ofToggleFullscreen();
-            break;
-        case ' ':
-            bRunSequence = !bRunSequence;
-            break;
-    }
+
 }

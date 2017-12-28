@@ -13,6 +13,7 @@ public:
     
     void init(string name="/dev/cu.usbmodem1421", int baud=115200);
     void setRange(int xMax, int yMax, int zMax);
+    void reset();
     void execute(string cmd);
     void makeVbo(vector<shared_ptr<Command>> cmds);
     void update();
@@ -32,14 +33,14 @@ public:
     
     State state{IDLE};
     ofSerial serial;
-    
     glm::vec3 targetPos;
     glm::vec3 currentPos;
     glm::vec3 originalPos;
     
     float targetSpeed;
-    bool bSuck{false};
+    bool bSuck;
     string latestCmd;
+    string errorMsg;
     
     ofRange xRange, yRange, zRange;
 
@@ -47,8 +48,5 @@ public:
     ofVboMesh dot;
     
     OrthoCam cam;
-    
-    string errorMsg{""};
-    //vector<shared_ptr<Command>> stack;
 
 };

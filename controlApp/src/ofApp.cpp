@@ -1,15 +1,16 @@
 #include "ofApp.h"
 #include "Command.h"
 #include "ofApp_helper.cpp"
+#include "ofApp_draw.cpp"
 #include "ofApp_key.cpp"
 
 //#define UPLOAD_PHOTO 1
 
 void ofApp::setup(){
-    ofSetVerticalSync(true);
     
+    ofSetVerticalSync(true);
     ofSetFrameRate(30);
-    ofSetLogLevel(OF_LOG_VERBOSE);
+    ofSetLogLevel(OF_LOG_NOTICE);
     
     setupCamera();
     
@@ -23,12 +24,15 @@ void ofApp::setup(){
     machine.init("/dev/cu.usbmodem1411", 115200);
     machine.setRange(200,200,100);
     generateSequence();
+    testSequence((totalSec+1)*ofGetTargetFrameRate());
+    machine.reset();
+    currentCmd = 0;
     machine.makeVbo(cmds);
     
     startFrame = ofGetFrameNum() + 30;
 
     // Homing
-    sleep(1);    
+    sleep(1);
     HomeCommand m(machine, 0);
     m.call();
 }
@@ -41,103 +45,64 @@ void ofApp::generateSequence(){
     
     float time = 0;
     
-    int row = 8;
-    int col = 8;
-    int xySpeed = 1000;
-    int zSpeed = 150;
+    float pickW = 40;
+    float dropW = 100;
+    
+    int row = 4;
+    int col = 4;
+    int xySpeed = 100000; // 3000;
+    int zSpeed  = 100000; // 150;
+    float suckWaitSec = 0.1;
     
     for(int i=0; i<row; i++){
         for(int j=0; j<col; j++){
             
-            pickPos.x =  50 + j*3;  // 40-80
-            pickPos.y = 125 + i*3;  // Y117 - Y157
+            pickPos.x =  50 + j*(pickW/row);  // 40-80
+            pickPos.y = 125 + i*(pickW/row);  // Y117 - Y157
             pickPos.z = 4;
             
-            dropPos.x = 60 + j*10;
-            dropPos.y = 97 - i*10;
+            dropPos.x = 50 + j*(dropW/row);
+            dropPos.y = 97 - i*(dropW/row);
             dropPos.z = 2;
             
-            // 1. move Z up
+            // pick up
             addMoveZ(time, pos, 20, zSpeed);
-            
-            // 2. move X to pickPos
-            addMoveX(time, pos, pickPos.x, xySpeed);
-
-            // 2. move Y to pickPos
             addMoveY(time, pos, pickPos.y, xySpeed);
-
-            // down to grain
-            addMoveZ(time, pos, 10, zSpeed);
-
-            // 5. turn on pump
-            addSuck(time, pos, true);
-
-            // 6. more closer to grain
+            addMoveX(time, pos, pickPos.x, xySpeed);
             addMoveZ(time, pos, 4, zSpeed);
-            time += 1;
+            time += suckWaitSec;
+            addSuck(time, pos, true);
             
-            // 7. lift up
+            // drop down
             addMoveZ(time, pos, 20, zSpeed);
-
-            // 8. go to drop down position YX
-            addMoveY(time, pos, dropPos.y, xySpeed);
-            
-            // 9. go to drop down position X
             addMoveX(time, pos, dropPos.x, xySpeed);
-
-            // 10. down
+            addMoveY(time, pos, dropPos.y, xySpeed);
             addMoveZ(time, pos, dropPos.z, zSpeed);
-
-            // 11. drop
             addSuck(time, pos, false);
-            time+=1;
+            time += suckWaitSec;
             
             if(0){
-                // 12. move up
+                // shoot photo
                 addMoveZ(time, pos, 15, zSpeed);
-                
-                // 13. cameara pos X
                 addMoveX(time, pos, dropPos.x-40, xySpeed);
-                
-                // 14. cameara pos Y
                 addMoveY(time, pos, dropPos.y-4, xySpeed);
-                
-                // 15. move down
                 addMoveZ(time, pos, 2, zSpeed);
-                
-                // 16. take photo
                 addPhoto(time, pos);
             }
         }
     }
     
+    time += 1;
+    addHome(time);
+    
     totalSec = time;
     
-    // print out sequence for check & save to txt file
+    // save command sequence to /bin/data/gcode.txt
     ofstream file(ofToDataPath("gcode.txt", true));
     for(auto it : cmds){
-        printf("Make command : %05df %s", it->frame, it->cmd.c_str());
         file << it->cmd;
     }
     file.close();
-}
-
-void ofApp::setupCamera(){
-    
-    //get back a list of devices.
-    vector<ofVideoDevice> devices = vidGrabber.listDevices();
-    
-    for(size_t i = 0; i < devices.size(); i++){
-        if(devices[i].bAvailable){
-            ofLogNotice() << devices[i].id << ": " << devices[i].deviceName;
-        }else{
-            ofLogNotice() << devices[i].id << ": " << devices[i].deviceName << " - unavailable ";
-        }
-    }
-    
-    vidGrabber.setDeviceID(15);
-    vidGrabber.setDesiredFrameRate(30);
-    bCamInit = vidGrabber.initGrabber(camWidth, camHeight);
 }
 
 void ofApp::update(){
@@ -150,66 +115,31 @@ void ofApp::update(){
     }
 }
 
+//
+//  Test and find error command before excute
+//
+void ofApp::testSequence(int totalFrame){
+
+    for(int i=0; i<totalFrame; i++){
+        machine.update();
+        checkSequence(i);
+    }
+}
+
 void ofApp::checkSequence(int now){
     
     int i = 0;
     for(auto it=cmds.begin(); it!=cmds.end(); ++it, i++){
         shared_ptr<Command> command = *it;
         if(command->frame == now){
-            command->call();
+            bool result = command->call();
             if(command->cmd == "take_photo\n"){
                 bSaveRequest = true;
             }
-            printf("Call command %05df : %s", command->frame, command->cmd.c_str());
-
+            if(!result) cout << now << " : " << machine.errorMsg << endl;
             currentCmd = i;
         }
     }
-}
-
-void ofApp::draw(){
-    
-    ofBackground(255);
-    ofSetColor(255);
-    vidGrabber.draw(0,0, camWidth*2, camHeight*2);
-    
-    ofPushMatrix();{
-        ofTranslate(18, ofGetHeight()-30);
-        
-        if(machine.serial.isInitialized()){
-            string msg1 = "position : " + ofToString(machine.targetPos) + "\n";
-            string msg2 = "IPv6     : " + address;
-            ofDrawBitmapString(msg1, 0, 0);
-            ofDrawBitmapString(msg2, 0, 20);
-        }
-    } ofPopMatrix();
-    
-    if(bSaveRequest && bCamInit){
-        string fileName(address+ ".png");
-        ofSaveScreen( fileName );
-#ifdef UPLOAD_PHOTO
-        uploadImage( fileName );
-#endif
-        bSaveRequest = false;
-        address = randomIPv6();
-    }
-    
-    drawInfo(22, 22);
-    
-    machine.draw(ofGetWidth()-222, 20);
-}
-
-void ofApp::newResponse(ofxHttpResponse & response){
-    cout << response.responseBody << endl;
-}
-
-void ofApp::uploadImage(string fileName){
-    ofxHttpForm form;
-    form.action = action_url;
-    form.method = OFX_HTTP_POST;
-    //form.addFormField("number", ofToString(counter));
-    form.addFile("fileToUpload", fileName);
-    httpUtils.addForm(form);
 }
 
 void ofApp::exit(){

@@ -1,8 +1,32 @@
+// global func
+static std::string randomIPv6() {
+    
+    std::string output;
+    char arr[16];
+    size_t length = sizeof(arr);
+    
+    for (int i=0; i<length; i+=2) {
+        arr[i] = (char)ofRandom(-127, 128);
+        arr[i+1] = (char)ofRandom(-127, 128);
+        
+        output += (ofToHex(arr[i]));
+        output += (ofToHex(arr[i+1]));
+        
+        if (i<(length-2)) {
+            output += ":";
+        }
+    }
+    return output;
+}
 
 //  helper func
 void ofApp::addCommand(float &time, shared_ptr<Command> cmd){
     cmds.push_back(cmd);
     time += cmd->durSec;
+}
+
+void ofApp::addHome(float & time){
+    addCommand(time, make_shared<HomeCommand>(machine, time));
 }
 
 void ofApp::addMoveX(float & time, glm::vec3 &pos, int endPos, int speed){
@@ -28,48 +52,45 @@ void ofApp::addPhoto(float &time, glm::vec3 & pos){
     addCommand(time, make_shared<PhotoCommand>(machine, time, pos));
 }
 
-
-void ofApp::drawInfo(int x, int y){
-    if(!bRunSequence){
-        string msg = "After HOMING,\nPress SPACE key to start a sequence";
-        ofSetColor(255,0,0);
-        ofDrawBitmapString(msg, ofGetWidth()/2-120, ofGetHeight()/2);
-    }
+void ofApp::setupCamera(){
     
-    {
-        string msg;
-        msg += "frame      : " + ofToString(currentFrame) + "\n";
-        msg += "sec        : " + ofToString(currentFrame/ofGetTargetFrameRate(),1) + "\n";
-        msg += "totalTime  : " + ofToString(totalSec/60,1) + " min\n";        
-        msg += "state      : " + machine.stateStr[machine.state] + "\n";
-        msg += "error      : " + machine.errorMsg + "\n";
-        msg += "pump       : " + ofToString(machine.bSuck ? "ON":"OFF") + "\n";
-        msg += "speed      : " + ofToString(machine.targetSpeed)  + "\n";
-        msg += "targetPos  : " + ofToString(machine.targetPos,0)  + "\n";
-        msg += "currentPos : " + ofToString(machine.currentPos,0)  + "\n";        
-        msg += "gcode      : " + machine.latestCmd + "\n";
-        //msg += "read  : " + ofToString(machine.bytesReadString) + "\n";
-        ofSetColor(255);
-        ofDrawBitmapString(msg, x, y);
-    }    
-}
-
-static std::string randomIPv6() {
+    //get back a list of devices.
+    vector<ofVideoDevice> devices = vidGrabber.listDevices();
     
-    std::string output;
-    char arr[16];
-    size_t length = sizeof(arr);
-    
-    for (int i=0; i<length; i+=2) {
-        arr[i] = (char)ofRandom(-127, 128);
-        arr[i+1] = (char)ofRandom(-127, 128);
-        
-        output += (ofToHex(arr[i]));
-        output += (ofToHex(arr[i+1]));
-        
-        if (i<(length-2)) {
-            output += ":";
+    for(size_t i = 0; i < devices.size(); i++){
+        if(devices[i].bAvailable){
+            ofLogNotice() << devices[i].id << ": " << devices[i].deviceName;
+        }else{
+            ofLogNotice() << devices[i].id << ": " << devices[i].deviceName << " - unavailable ";
         }
     }
-    return output;
+    
+    vidGrabber.setDeviceID(15);
+    vidGrabber.setDesiredFrameRate(30);
+    bCamInit = vidGrabber.initGrabber(camWidth, camHeight);
+}
+
+void ofApp::takePhoto(){
+    if(bSaveRequest && bCamInit){
+        string fileName(address+ ".png");
+        ofSaveScreen( fileName );
+        uploadImage( fileName );
+        bSaveRequest = false;
+        address = randomIPv6();
+    }
+}
+
+void ofApp::uploadImage(string fileName){
+#ifdef UPLOAD_PHOTO
+    ofxHttpForm form;
+    form.action = action_url;
+    form.method = OFX_HTTP_POST;
+    //form.addFormField("number", ofToString(counter));
+    form.addFile("fileToUpload", fileName);
+    httpUtils.addForm(form);
+#endif
+}
+
+void ofApp::newResponse(ofxHttpResponse & response){
+    cout << response.responseBody << endl;
 }

@@ -14,7 +14,7 @@ struct Command{
     
     virtual ~Command() = default;
     virtual bool call() const = 0;
-    //virtual undo() const = 0;
+    //virtual bool undo() const = 0;
 
     int frame;
     float timeSec;
@@ -29,7 +29,6 @@ struct HomeCommand : Command{
     :Command(timeSec = _timeSec), m(_m){
         durSec = 10;
         cmd = "G28\n";
-        return true;
     }
     
     Machine & m;
@@ -48,7 +47,7 @@ struct HomeCommand : Command{
 struct SuckCommand : Command{
     SuckCommand(Machine & _m, float _timeSec, glm::vec3 _pos, bool _on)
     :Command(_timeSec),m(_m),pos(_pos),on(_on){
-        durSec = 0.5;
+        durSec = 0.1;
         cmd = on ? "M104 S190 T0\n" : "M104 S0 T0\n";
     }
     
@@ -130,15 +129,14 @@ struct MoveCommand : Command{
 
         if(!checkRange()){
             m.errorMsg = "target position is out of range";
-            ofLogError("MoveCommand", m.errorMsg);
             return false;
         }
         
         if(m.state == Machine::State::MOVE_X
            || m.state == Machine::State::MOVE_Y
            || m.state == Machine::State::MOVE_Z){
-            m.errorMsg = "machine is moving, command ignored";
-            ofLogNotice("MoveCommand", m.errorMsg);
+            m.errorMsg  = "machine is moving, command ignored";
+            m.errorMsg += ", cmd = " + cmd;
             return false;
         }
         
