@@ -54,24 +54,28 @@ void ofApp::addPhoto(float &time, glm::vec3 & pos){
 
 void ofApp::setupCamera(){
     
-    //get back a list of devices.
     vector<ofVideoDevice> devices = vidGrabber.listDevices();
-    
-    for(size_t i = 0; i < devices.size(); i++){
+
+    for(size_t i=0; i<devices.size(); i++){
         if(devices[i].bAvailable){
             ofLogNotice() << devices[i].id << ": " << devices[i].deviceName;
+            for(auto & f : devices[i].formats){
+                ofLogNotice() << f.width << " x " << f.height;
+            }
         }else{
             ofLogNotice() << devices[i].id << ": " << devices[i].deviceName << " - unavailable ";
         }
     }
-    
+
+    ofSetLogLevel(OF_LOG_VERBOSE);
     vidGrabber.setDeviceID(15);
     vidGrabber.setDesiredFrameRate(30);
     bCamInit = vidGrabber.initGrabber(camWidth, camHeight);
+    ofSetLogLevel(OF_LOG_NOTICE);
 }
 
 void ofApp::takePhoto(){
-    if(bSaveRequest && bCamInit){
+    if(bCamInit){
         string fileName(address+ ".png");
         ofSaveScreen( fileName );
         uploadImage( fileName );
@@ -93,4 +97,30 @@ void ofApp::uploadImage(string fileName){
 
 void ofApp::newResponse(ofxHttpResponse & response){
     cout << response.responseBody << endl;
+}
+
+void ofApp::setupCv(){
+
+    int w, h;
+
+#ifdef USE_CAMERA_DEVICE
+    w = vidGrabber.getWidth();
+    h = vidGrabber.getHeight();
+#else
+    ofDirectory dir;
+    dir.listDir("img/grains/");
+    dir.allowExt("png");
+    dir.sort();
+    if( dir.size() ) testImg.assign(dir.size(), ofImage());
+    for(int i = 0; i<testImg.size(); i++){
+        testImg[i].load(dir.getPath(i));
+    }
+    w = testImg[0].getWidth();
+    h = testImg[0].getHeight();
+#endif
+
+    colorImg.allocate(w, h);
+    grayImg.allocate(w, h);
+    grayThresh.allocate(w, h);
+    threshold = 85;
 }

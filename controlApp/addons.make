@@ -1,4 +1,4 @@
 ofxHttpUtils
+ofxOpenCv
 ofxPoco
 ofxRange
-

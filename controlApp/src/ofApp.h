@@ -3,7 +3,7 @@
 #include "ofMain.h"
 #include "ofxHttpUtils.h"
 #include "Machine.h"
-#include <queue>
+#include "ofxOpenCv.h"
 
 class Command;
 
@@ -12,6 +12,8 @@ class ofApp : public ofBaseApp{
 public:
     void setup();
     void update();
+    void updateCv();
+    
     void generateSequence();
     void checkSequence(int frame);
     void testSequence(int totalFrame);
@@ -29,6 +31,7 @@ public:
     void takePhoto();
     void uploadImage(string s);
     void newResponse(ofxHttpResponse & response);
+    void setupCv();
 
     // ofApp_draw.cpp
     void draw();
@@ -36,7 +39,9 @@ public:
     void drawManual(int x, int y);
     void drawCommands(int x, int y);
     void drawAddress(int x, int y);
-
+    void drawCvMonitor(int x, int y);
+    void drawCvContour(int x, int y, float scale);
+    
     // ofApp_key.cpp
     void keyPressed(int key);
 
@@ -44,8 +49,8 @@ public:
     ofVideoGrabber vidGrabber;
     bool bCamInit       = false;
     bool bSaveRequest   = false;
-    int camWidth        = 320 * 2;
-    int camHeight       = 240 * 2;
+    int camWidth        = 640;
+    int camHeight       = 480;
     
     // web
     ofxHttpUtils httpUtils;
@@ -63,6 +68,15 @@ public:
     float totalSec = 0;
 
     bool bShowManual = true;
-    
+
+    // openCv
+    ofxCvColorImage colorImg;
+    ofxCvGrayscaleImage grayImg;
+    ofxCvGrayscaleImage grayThresh;
+    ofxCvContourFinder contourFinder;
+
+    vector<ofImage> testImg;
+    int currentImg = 0;
+    int threshold;
 };
 

@@ -1,10 +1,11 @@
+//#define UPLOAD_PHOTO 1
+//#define USE_CAMERA_DEVICE 1   // otherwise use test image
+
 #include "ofApp.h"
 #include "Command.h"
 #include "ofApp_helper.cpp"
 #include "ofApp_draw.cpp"
 #include "ofApp_key.cpp"
-
-//#define UPLOAD_PHOTO 1
 
 void ofApp::setup(){
     
@@ -35,6 +36,8 @@ void ofApp::setup(){
     sleep(1);
     HomeCommand m(machine, 0);
     m.call();
+    
+    setupCv();
 }
 
 void ofApp::generateSequence(){
@@ -113,6 +116,27 @@ void ofApp::update(){
         checkSequence(currentFrame);
         currentFrame++;
     }
+    
+    updateCv();
+}
+
+void ofApp::updateCv(){
+
+#ifdef USE_CAMERA_DEVICE
+    colorImg.setFromPixels(vidGrabber.getPixels());
+#else
+    colorImg.setFromPixels(testImg[currentImg].getPixels());
+#endif
+    grayImg = colorImg;
+    
+    grayThresh = grayImg;
+    grayThresh.threshold(threshold);
+    grayThresh.flagImageChanged();
+    grayThresh.invert();
+
+    int w = colorImg.getWidth();
+    int h = colorImg.getHeight();
+    int n = contourFinder.findContours(grayThresh, 80*80, w/3*h/3, 10, false);
 }
 
 //
@@ -145,4 +169,3 @@ void ofApp::checkSequence(int now){
 void ofApp::exit(){
     httpUtils.stop();
 }
-

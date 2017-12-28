@@ -14,6 +14,26 @@ void ofApp::keyPressed(int key){
         case 'M':
             bShowManual = !bShowManual;
             break;
+            
+        case '+':
+            currentImg = MIN(testImg.size()-1, currentImg+1);
+            break;
+
+        case '-':
+            currentImg = MAX(0, currentImg-1);
+            break;
+            
+        case '.':
+        case '>':
+            threshold++;
+            if (threshold > 255) threshold = 255;
+            break;
+
+        case ',':
+        case '<':
+            threshold --;
+            if (threshold < 0) threshold = 0;
+            break;            
     }
     
     if(bRunSequence) return;
