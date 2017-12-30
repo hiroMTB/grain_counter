@@ -67,6 +67,13 @@ void Machine::makeVbo(vector<shared_ptr<Command>> cmds){
 }
 
 void Machine::update(){
+    
+    if(!serial.isInitialized()){
+        state = ERROR;
+        errorMsg = "Can't connect to machine";
+        return;
+    }
+    
     // simulate current position
     if(state == MOVE_X || state == MOVE_Y || state == MOVE_Z){
         float dist = glm::distance(currentPos, targetPos);

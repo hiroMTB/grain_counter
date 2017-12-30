@@ -22,22 +22,22 @@ void ofApp::setup(){
 #endif
     address = randomIPv6();
     
-    machine.init("/dev/cu.usbmodem1411", 115200);
-    machine.setRange(200,200,100);
+    machine.setRange(200,160,100);
     generateSequence();
     testSequence((totalSec+1)*ofGetTargetFrameRate());
-    machine.reset();
+    machine.init("/dev/cu.usbmodem1411", 115200);
+    
     currentCmd = 0;
     machine.makeVbo(cmds);
     
     startFrame = ofGetFrameNum() + 30;
 
+    setupCv();
+
     // Homing
     sleep(1);
     HomeCommand m(machine, 0);
     m.call();
-    
-    setupCv();
 }
 
 void ofApp::generateSequence(){
@@ -48,41 +48,48 @@ void ofApp::generateSequence(){
     
     float time = 0;
     
-    float pickW = 40;
-    float dropW = 100;
+    float pickW = 45;
+    float pickH = 45;
     
-    int row = 4;
-    int col = 4;
-    int xySpeed = 100000; // 3000;
-    int zSpeed  = 100000; // 150;
-    float suckWaitSec = 0.1;
+    float dropW = 140;
+    float dropH = 120;
+    
+    int row = 8;
+    int col = 8;
+    int xySpeed = 10000;    // MAX 10000?
+    int zSpeed  = 150;      // MAX 150
+    float suckWaitSec = 0.2;
     
     for(int i=0; i<row; i++){
         for(int j=0; j<col; j++){
             
-            pickPos.x =  50 + j*(pickW/row);  // 40-80
-            pickPos.y = 125 + i*(pickW/row);  // Y117 - Y157
+            pickPos.x =  38 + (j+1)*pickW/(col+1);
+            pickPos.y = 120 + (i+1)*pickH/(row+1);
             pickPos.z = 4;
             
-            dropPos.x = 50 + j*(dropW/row);
-            dropPos.y = 97 - i*(dropW/row);
+            dropPos.x = 41 + (j+1)*dropW/(col+1);
+            dropPos.y = 113 - (i+1)*dropH/(row+1);
             dropPos.z = 2;
             
-            // pick up
-            addMoveZ(time, pos, 20, zSpeed);
-            addMoveY(time, pos, pickPos.y, xySpeed);
-            addMoveX(time, pos, pickPos.x, xySpeed);
-            addMoveZ(time, pos, 4, zSpeed);
-            time += suckWaitSec;
-            addSuck(time, pos, true);
+            if(1){
+                // pick up
+                addMoveZ(time, pos, 20, zSpeed);
+                addMoveY(time, pos, pickPos.y, xySpeed);
+                addMoveX(time, pos, pickPos.x, xySpeed);
+                addMoveZ(time, pos, 4, zSpeed);
+                time += suckWaitSec;
+                addSuck(time, pos, true);
+            }
             
-            // drop down
-            addMoveZ(time, pos, 20, zSpeed);
-            addMoveX(time, pos, dropPos.x, xySpeed);
-            addMoveY(time, pos, dropPos.y, xySpeed);
-            addMoveZ(time, pos, dropPos.z, zSpeed);
-            addSuck(time, pos, false);
-            time += suckWaitSec;
+            if(1){
+                // drop down
+                addMoveZ(time, pos, 20, zSpeed);
+                addMoveX(time, pos, dropPos.x, xySpeed);
+                addMoveY(time, pos, dropPos.y, xySpeed);
+                addMoveZ(time, pos, dropPos.z, zSpeed);
+                addSuck(time, pos, false);
+                time += suckWaitSec;
+            }
             
             if(0){
                 // shoot photo
@@ -139,15 +146,19 @@ void ofApp::updateCv(){
     int n = contourFinder.findContours(grayThresh, 80*80, w/3*h/3, 10, false);
 }
 
-//
-//  Test and find error command before excute
-//
 void ofApp::testSequence(int totalFrame){
 
+    if(machine.serial.isInitialized()){
+        assert("Dont call this test after Machine::init");
+        // if we call this after init(),
+        // too many gcode commands will be sent to actual device
+    }
+    
     for(int i=0; i<totalFrame; i++){
         machine.update();
         checkSequence(i);
     }
+    machine.reset();
 }
 
 void ofApp::checkSequence(int now){

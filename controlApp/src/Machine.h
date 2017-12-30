@@ -20,15 +20,16 @@ public:
     void draw(int x, int y);
     void scene();
 
-    enum State{IDLE, HOME, MOVE_X, MOVE_Y, MOVE_Z, SUCK, PHOTO};
+    enum State{IDLE, HOME, MOVE_X, MOVE_Y, MOVE_Z, SUCK, PHOTO, ERROR};
     map<State, string> stateStr{
-        {IDLE,  "idle"},
-        {HOME,  "home"},
-        {MOVE_X,"move X"},
-        {MOVE_Y,"move Y"},
-        {MOVE_Z,"move Z"},
-        {SUCK,  "pump"},
-        {PHOTO, "photo"}
+        {IDLE,  "Idle"},
+        {HOME,  "Homing"},
+        {MOVE_X,"Move X"},
+        {MOVE_Y,"Move Y"},
+        {MOVE_Z,"Move Z"},
+        {SUCK,  "Pump"},
+        {PHOTO, "Photo"},
+        {ERROR, "Error"}
     };
     
     State state{IDLE};

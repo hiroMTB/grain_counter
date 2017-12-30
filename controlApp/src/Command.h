@@ -47,7 +47,7 @@ struct HomeCommand : Command{
 struct SuckCommand : Command{
     SuckCommand(Machine & _m, float _timeSec, glm::vec3 _pos, bool _on)
     :Command(_timeSec),m(_m),pos(_pos),on(_on){
-        durSec = 0.1;
+        durSec = 1.0/ofGetTargetFrameRate();
         cmd = on ? "M104 S190 T0\n" : "M104 S0 T0\n";
     }
     
@@ -113,7 +113,7 @@ struct MoveCommand : Command{
                 break;
         }
         cmd = string(c);
-        durSec = (dist/speed) * 60.0f +  0.1;
+        durSec = (dist/speed) * 60.0f + 1.0/ofGetTargetFrameRate()*2; // +  0.1;
     }
 
     Machine & m;
