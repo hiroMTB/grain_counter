@@ -108,7 +108,8 @@ void ofApp::generateSequence(){
     totalSec = time;
     
     // save command sequence to /bin/data/gcode.txt
-    ofstream file(ofToDataPath("gcode.txt", true));
+    filesystem::path path("gcode.txt");
+    ofstream file(ofToDataPath(path, true));
     for(auto it : cmds){
         file << it->cmd;
     }
