@@ -21,7 +21,7 @@ static std::string randomIPv6() {
 
 //  helper func
 void ofApp::addCommand(float &time, shared_ptr<Command> cmd){
-    cmds.push_back(cmd);
+    cmds.emplace_back(cmd);
     time += cmd->durSec;
 }
 
@@ -30,17 +30,17 @@ void ofApp::addHome(float & time){
 }
 
 void ofApp::addMoveX(float & time, glm::vec3 &pos, int endPos, int speed){
-    addCommand(time, make_shared<MoveCommand>(machine, MoveCommand::AXIS_X, time, pos, endPos, speed));
+    addCommand(time, make_shared<MoveCommand>(machine, MoveCommand::Axis::X, time, pos, endPos, speed));
     pos.x = endPos;
 }
 
 void ofApp::addMoveY(float &time, glm::vec3 &pos, int endPos, int speed){
-    addCommand(time, make_shared<MoveCommand>(machine, MoveCommand::AXIS_Y, time, pos, endPos, speed));
+    addCommand(time, make_shared<MoveCommand>(machine, MoveCommand::Axis::Y, time, pos, endPos, speed));
     pos.y = endPos;
 }
 
 void ofApp::addMoveZ(float &time, glm::vec3 &pos, int endPos, int speed){
-    addCommand(time, make_shared<MoveCommand>(machine, MoveCommand::AXIS_Z, time, pos, endPos, speed));
+    addCommand(time, make_shared<MoveCommand>(machine, MoveCommand::Axis::Z, time, pos, endPos, speed));
     pos.z = endPos;
 }
 

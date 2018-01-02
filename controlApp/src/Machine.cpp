@@ -22,7 +22,7 @@ void Machine::setRange(int xMax, int yMax, int zMax){
 void Machine::reset(){
     latestCmd = "";
     errorMsg = "";
-    state = IDLE;
+    state = State::IDLE;
     targetPos = glm::vec3(0,0,0);
     currentPos = glm::vec3(0,0,0);
     originalPos = glm::vec3(0,0,0);
@@ -69,13 +69,13 @@ void Machine::makeVbo(vector<shared_ptr<Command>> cmds){
 void Machine::update(){
     
     if(!serial.isInitialized()){
-        state = ERROR;
+        state = State::ERROR;
         errorMsg = "Can't connect to machine";
         return;
     }
     
     // simulate current position
-    if(state == MOVE_X || state == MOVE_Y || state == MOVE_Z){
+    if(state == State::MOVE_X || state == State::MOVE_Y || state == State::MOVE_Z){
         float dist = glm::distance(currentPos, targetPos);
         glm::vec3 dir = targetPos - originalPos;
         dir = glm::normalize(dir);
@@ -86,7 +86,7 @@ void Machine::update(){
             currentPos += adder;
         }else{
             currentPos = targetPos;
-            state = IDLE;
+            state = State::IDLE;
         }
     }
 }

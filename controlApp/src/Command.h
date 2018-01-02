@@ -85,9 +85,9 @@ struct PhotoCommand : Command{
 
 struct MoveCommand : Command{
 
-    enum AxisType{AXIS_X, AXIS_Y, AXIS_Z};
+    enum class Axis{X, Y, Z};
     
-    MoveCommand(Machine & _m, AxisType _type, float _timeSec, glm::vec3 _stPos, int _endVal, int _speed)
+    MoveCommand(Machine & _m, Axis _type, float _timeSec, glm::vec3 _stPos, int _endVal, int _speed)
     :Command(_timeSec), m(_m), type(_type), stPos(_stPos), endVal(_endVal), speed(_speed)
     {
         // make gcode, calc dist, speed
@@ -95,21 +95,24 @@ struct MoveCommand : Command{
         
         char c[255];
         switch(type){
-            case AXIS_X:
+            case Axis::X:
                 sprintf(c, "G0 X%d F%d\n", endVal, speed);
                 dist = abs(endVal - stPos.x);
                 endPos.x = endVal;
                 break;
                 
-            case AXIS_Y:
+            case Axis::Y:
                 sprintf(c, "G0 Y%d F%d\n", endVal, speed);
                 dist = abs(endVal - stPos.y);
                 endPos.y = endVal;
                 break;
-            case AXIS_Z:
+            case Axis::Z:
                 sprintf(c, "G0 Z%d F%d\n", endVal, speed);
                 dist = abs(endVal - stPos.z);
                 endPos.z = endVal;
+                break;
+            default:
+                ofLogError("strange Axis");
                 break;
         }
         cmd = string(c);
@@ -117,7 +120,7 @@ struct MoveCommand : Command{
     }
 
     Machine & m;
-    AxisType type;
+    Axis type;
     glm::vec3 stPos;
     glm::vec3 endPos;
 
@@ -147,9 +150,9 @@ struct MoveCommand : Command{
         m.currentPos = stPos;
         m.targetPos = endPos;
         switch(type){
-            case AXIS_X: m.state = Machine::State::MOVE_X; break;
-            case AXIS_Y: m.state = Machine::State::MOVE_Y; break;
-            case AXIS_Z: m.state = Machine::State::MOVE_Z; break;
+            case Axis::X: m.state = Machine::State::MOVE_X; break;
+            case Axis::Y: m.state = Machine::State::MOVE_Y; break;
+            case Axis::Z: m.state = Machine::State::MOVE_Z; break;
         }
         
         m.errorMsg = "";

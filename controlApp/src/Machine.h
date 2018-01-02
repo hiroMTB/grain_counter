@@ -20,19 +20,20 @@ public:
     void draw(int x, int y);
     void scene();
 
-    enum State{IDLE, HOME, MOVE_X, MOVE_Y, MOVE_Z, SUCK, PHOTO, ERROR};
+    enum class State{IDLE, HOME, MOVE_X, MOVE_Y, MOVE_Z, SUCK, PHOTO, ERROR};
+
     map<State, string> stateStr{
-        {IDLE,  "Idle"},
-        {HOME,  "Homing"},
-        {MOVE_X,"Move X"},
-        {MOVE_Y,"Move Y"},
-        {MOVE_Z,"Move Z"},
-        {SUCK,  "Pump"},
-        {PHOTO, "Photo"},
-        {ERROR, "Error"}
+        {State::IDLE,  "Idle"},
+        {State::HOME,  "Homing"},
+        {State::MOVE_X,"Move X"},
+        {State::MOVE_Y,"Move Y"},
+        {State::MOVE_Z,"Move Z"},
+        {State::SUCK,  "Pump"},
+        {State::PHOTO, "Photo"},
+        {State::ERROR, "Error"}
     };
     
-    State state{IDLE};
+    State state{State::IDLE};
     ofSerial serial;
     glm::vec3 targetPos;
     glm::vec3 currentPos;

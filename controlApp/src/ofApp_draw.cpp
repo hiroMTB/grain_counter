@@ -116,7 +116,7 @@ void ofApp::drawCvContour(int x, int y, float scale){
     glm::vec2 st;
     for(int i=0; i<contourFinder.nBlobs; i++){
         const ofxCvBlob & b = contourFinder.blobs[i];
-        polys.push_back(ofPolyline());
+        polys.emplace_back(ofPolyline());
         ofPolyline & p = polys.back();
         
         for(int i=0; i<b.nPts; i++){
